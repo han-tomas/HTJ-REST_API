@@ -2,19 +2,22 @@ package htj.hantomas.htjrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest
 /*
@@ -26,7 +29,7 @@ public class EventControllerTests {
     @Autowired
     MockMvc mockMvc;
     /*
-    MocMVC를 사용하면 moc으로 만들어져 있는, 모킹 되어있는 Dispatcher Servlet을 상대로
+    MockMVC를 사용하면 moc으로 만들어져 있는, 모킹 되어있는 Dispatcher Servlet을 상대로
     가짜 요청을 Dispatcher Servlet에게 보내고 응답을 확인할 수 있는 테스트를 만들 수 있다.
     -> Web Server를 띄우지 않기 때문에 빠르다
         하지만, Dispatcher Servlet까지 만들어야 하기 때문에 단위 테스트 보단 오래걸린다.
@@ -36,6 +39,12 @@ public class EventControllerTests {
     /*
      SpringBoot를 사용할 때 MappingJacksonJson이 의존성으로 들어가 있으면,
      ObjectMapper를 자동으로 bean으로 등록을 해준다.
+     */
+    @MockBean
+    EventRepository eventRepository;
+    /*
+        @WebMvcTest는 web용 bean들만 등록해주고, Repository bean은 등록해 주지 않는다.
+        @MockBean으로 등록해준ㄷ.
      */
     @Test
     public void createEvent() throws Exception {
@@ -51,6 +60,13 @@ public class EventControllerTests {
                         .limitOfEnrollment(100)
                         .location("강남역 D2 스타텁 팩토리")
                         .build();
+        /*
+            EventRepository는 mock 객체이기 때문에, createEvent에서는 Null값을 반환하면서, NullPointException 발생
+            Stubbing 작업이 필요하다.
+                만들어진 mock 객체의 메소드를 실행했을 때 어떤 리턴 값을 리턴할지를 정의하는 것
+         */
+        event.setId(10);
+        Mockito.when(eventRepository.save(event)).thenReturn(event);
 
         mockMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -58,7 +74,9 @@ public class EventControllerTests {
                         .content(objectMapper.writeValueAsString(event)))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("id").exists());
+                .andExpect(jsonPath("id").exists())
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE,MediaTypes.HAL_JSON_VALUE));
     }
     /*
     이 코드는 Spring MVC의 MockMvc를 사용하여 "/api/events" 엔드포인트에 POST 요청을 보내는 테스트입니다.

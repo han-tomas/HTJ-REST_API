@@ -1,6 +1,10 @@
 package htj.hantomas.htjrestapi.events;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import java.time.LocalDateTime;
 @Builder @AllArgsConstructor @NoArgsConstructor
@@ -21,6 +25,8 @@ import java.time.LocalDateTime;
      Equals와 HashCode를 구현해 주지만 모든 property를 다 써서 구현하기 때문에
      Entity에 @Data를 쓰면 안된다. => StackOverFlow
  */
+@Entity
+
 public class Event {
     private Integer id;
     private String name;
@@ -35,6 +41,7 @@ public class Event {
     private int limitOfEnrollment;
     private boolean offline;
     private boolean free;
+    @Enumerated(EnumType.STRING)
     private EventStatus eventStatus = EventStatus.DRAFT;
 
 }
