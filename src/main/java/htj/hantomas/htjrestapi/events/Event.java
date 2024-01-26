@@ -1,8 +1,6 @@
 package htj.hantomas.htjrestapi.events;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
@@ -28,6 +26,7 @@ import java.time.LocalDateTime;
 @Entity
 
 public class Event {
+    @Id @GeneratedValue
     private Integer id;
     private String name;
     private String description;

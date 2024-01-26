@@ -1,5 +1,6 @@
 package htj.hantomas.htjrestapi.events;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
@@ -21,12 +22,34 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
     클래스 안에 있는 모든 Handler들은 HAL_JSON ContentType으로 요청을 보낼거다.
 */
 public class EventController {
-    @Autowired
-    EventRepository eventRepository;
+    private final EventRepository eventRepository;
+    private final ModelMapper modelMapper;
+    public EventController(EventRepository eventRepository, ModelMapper modelMapper){
+        this.eventRepository = eventRepository;
+        this.modelMapper = modelMapper;
+    }
     @PostMapping //("/api/events") 위에서 매핑되었기 때문에 중복해서 설정안해도 됨.
     /*
     클래스 안에 있는 모든 Handler들은 HAL_JSON ContentType으로 요청을 보낼거고
      */
+    public ResponseEntity createEvent(@RequestBody EventDto eventDto){
+        /*
+        Event event = Event.builder()
+                .name(eventDto.getName())
+                ...
+                .build();
+         EventDto를 사용하기 위해서는 이렇게 다 정의 후 사용해야 하지만,
+         ModelMapper 를 통해 이 과정을 생략할 수 있다.
+        */
+        Event event = modelMapper.map(eventDto, Event.class);
+
+        Event newEvent = this.eventRepository.save(event);
+
+        URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
+        event.setId(10);
+        return ResponseEntity.created(createdUri).body(event);
+    }
+    /*
     public ResponseEntity createEvent(@RequestBody Event event){
         Event newEvent = this.eventRepository.save(event);
 
@@ -34,6 +57,8 @@ public class EventController {
         event.setId(10);
         return ResponseEntity.created(createdUri).body(event);
     }
+    */
+
     /*
     public ResponseEntity createEvent(@RequestBody Event event){
 

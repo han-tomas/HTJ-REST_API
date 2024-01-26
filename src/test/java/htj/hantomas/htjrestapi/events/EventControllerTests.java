@@ -1,10 +1,13 @@
 package htj.hantomas.htjrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -19,7 +22,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest
+//@WebMvcTest
+@SpringBootTest // Slicing Test 안하고
+@AutoConfigureMockMvc // SpringBootTest시 MockMVC를 사용하려면
 /*
 Web과 관련된 것만 등록을 해줬기 때문에 Slicing Test라 한다
 Web과 관련된 Bean들만 등록해서 만듦 => 더 빠름
@@ -40,8 +45,10 @@ public class EventControllerTests {
      SpringBoot를 사용할 때 MappingJacksonJson이 의존성으로 들어가 있으면,
      ObjectMapper를 자동으로 bean으로 등록을 해준다.
      */
+    /*
     @MockBean
     EventRepository eventRepository;
+    */
     /*
         @WebMvcTest는 web용 bean들만 등록해주고, Repository bean은 등록해 주지 않는다.
         @MockBean으로 등록해준ㄷ.
@@ -49,6 +56,7 @@ public class EventControllerTests {
     @Test
     public void createEvent() throws Exception {
         Event event = Event.builder()
+                        .id(100) // id는 DB에 들어갈때 자동 생성 되어야 되는 값.
                         .name("Spring")
                         .description("REST API Development with Spring")
                         .beginEnrollmentDateTime(LocalDateTime.of(2024,01,25,14,21))
@@ -59,15 +67,22 @@ public class EventControllerTests {
                         .maxPrice(200)
                         .limitOfEnrollment(100)
                         .location("강남역 D2 스타텁 팩토리")
+                        .free(true) //.basePrice(100), .maxPrice(200), .limitOfEnrollment(100) 값이 있는경우에 free는 true 일 수 없다.
+                        .offline(false) // .location("강남역 D2 스타텁 팩토리") 가 있는 경우 offline이 false가 될 수 없다.
+                        .eventStatus(EventStatus.PUBLISHED) //EventStatus는 DRAFT여야 하지만 PUBLISHED로 설정
                         .build();
         /*
             EventRepository는 mock 객체이기 때문에, createEvent에서는 Null값을 반환하면서, NullPointException 발생
             Stubbing 작업이 필요하다.
                 만들어진 mock 객체의 메소드를 실행했을 때 어떤 리턴 값을 리턴할지를 정의하는 것
          */
-        event.setId(10);
+        //event.setId(10);
+        /*
         Mockito.when(eventRepository.save(event)).thenReturn(event);
-
+        EventDto를 ModelMapper의 메서드를 통해 만든 새로운 event객체로 eventRepository.save(event)의 event객체가 아니므로
+        stubbing하기 전과 같이 null 값이 리턴 되어버린다.
+        그래서 더이상 WebMvcTest를 이용한 slice 테스트는 불가.
+        */
         mockMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaTypes.HAL_JSON_VALUE)
@@ -76,7 +91,14 @@ public class EventControllerTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("id").exists())
                 .andExpect(header().exists(HttpHeaders.LOCATION))
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE,MediaTypes.HAL_JSON_VALUE));
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE,MediaTypes.HAL_JSON_VALUE))
+                .andExpect(jsonPath("id").value(Matchers.not(100))) // id 는 100이면 안된다.
+                .andExpect(jsonPath("free").value(Matchers.not(true))) // free는 true면 안된다
+                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name())) //EventStatus는 DRAFT여야 한다.
+                /*
+                   EventDto의 값을 이용하기 때문에 테스트에 넣어준 id와 free값(DTO에 없는)은 자동으로 무시 되므로, 테스트는 성공하게 된다.
+                */
+        ;
     }
     /*
     이 코드는 Spring MVC의 MockMvc를 사용하여 "/api/events" 엔드포인트에 POST 요청을 보내는 테스트입니다.
