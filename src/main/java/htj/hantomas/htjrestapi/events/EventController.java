@@ -27,9 +27,11 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class EventController {
     private final EventRepository eventRepository;
     private final ModelMapper modelMapper;
-    public EventController(EventRepository eventRepository, ModelMapper modelMapper){
+    private final EventValidator eventValidator;
+    public EventController(EventRepository eventRepository, ModelMapper modelMapper, EventValidator eventValidator){
         this.eventRepository = eventRepository;
         this.modelMapper = modelMapper;
+        this.eventValidator = eventValidator;
     }
     @PostMapping
     public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors){
@@ -41,6 +43,12 @@ public class EventController {
         if(errors.hasErrors()){
             return ResponseEntity.badRequest().build(); // 에러가 있으면 Bad_Request를 리턴한다.
         }
+
+        eventValidator.validate(eventDto, errors);
+        if(errors.hasErrors()){ // eventValidator를 통해 들어온 error가 있으면
+            return ResponseEntity.badRequest().build(); // Bad_Request를 리턴한다.
+        }
+
         Event event = modelMapper.map(eventDto, Event.class);
 
         Event newEvent = this.eventRepository.save(event);

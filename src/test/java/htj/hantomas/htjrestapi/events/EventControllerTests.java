@@ -121,7 +121,7 @@ public class EventControllerTests {
         그 결과로 반환된 응답이 적절한 상태 코드와 새 이벤트의 ID를 포함하고 있는지 검증합니다.
      */
     @Test
-    public void createEvent_Bad_request() throws Exception {
+    public void createEvent_Bad_request() throws Exception { // 입력값 이외의 입력에 대한 Bad_Request응답
         /*
         application.properties에 아래의 Jackson의 ObjectMapper 커스터마이징을 통해
         spring.jackson.deserialization.fail-on-unknown-properties=true
@@ -154,8 +154,33 @@ public class EventControllerTests {
     }
 
     @Test
-    public void createEvent_Bad_Request_Empty_Input() throws Exception {
+    public void createEvent_Bad_Request_Empty_Input() throws Exception { // 입력값이 비어있을때 @Valid를 이용한 Validation(검증)
         EventDto eventDto = EventDto.builder().build();
+
+        this.mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createEvent_Bad_Request_Wrong_Input() throws Exception { // 입력값이 잘못 되었을때
+                                                                        /*
+                                                                             (ex. 이벤트 종료날짜가 시작날짜보다 빠른경우,
+                                                                                    basePrice보다 maxPrice가 작은 경우.)
+                                                                         */
+        EventDto eventDto = EventDto.builder()
+                .name("Spring")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2024,01,25,14,21))
+                .closeEnrollmentDateTime(LocalDateTime.of(2024,01,24,14,21))
+                .beginEventDateTime(LocalDateTime.of(2024,01,24,14,21))
+                .endEventDateTime(LocalDateTime.of(2024,01,23,14,21))
+                .basePrice(10000)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 D2 스타텁 팩토리")
+                .build();
 
         this.mockMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
