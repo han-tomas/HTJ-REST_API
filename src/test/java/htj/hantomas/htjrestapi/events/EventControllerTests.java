@@ -94,8 +94,8 @@ public class EventControllerTests {
                 .andExpect(jsonPath("id").exists())
                 .andExpect(header().exists(HttpHeaders.LOCATION))
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE,MediaTypes.HAL_JSON_VALUE))
-                .andExpect(jsonPath("id").value(Matchers.not(100))) // id 는 100이면 안된다.
-                .andExpect(jsonPath("free").value(Matchers.not(true))) // free는 true면 안된다
+                .andExpect(jsonPath("free").value(false)) // free는 true면 안된다
+                .andExpect(jsonPath("offline").value(true))
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name())) //EventStatus는 DRAFT여야 한다.
                 /*
                    EventDto의 값을 이용하기 때문에 테스트에 넣어준 id와 free값(DTO에 없는)은 자동으로 무시 되므로, 테스트는 성공하게 된다.
