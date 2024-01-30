@@ -55,8 +55,8 @@ public class EventControllerTests {
      */
     @Test
     public void createEvent() throws Exception {
-        Event event = Event.builder()
-                        .id(100) // id는 DB에 들어갈때 자동 생성 되어야 되는 값.
+        EventDto event = EventDto.builder()
+                        //.id(100) // id는 DB에 들어갈때 자동 생성 되어야 되는 값.
                         .name("Spring")
                         .description("REST API Development with Spring")
                         .beginEnrollmentDateTime(LocalDateTime.of(2024,01,25,14,21))
@@ -67,9 +67,9 @@ public class EventControllerTests {
                         .maxPrice(200)
                         .limitOfEnrollment(100)
                         .location("강남역 D2 스타텁 팩토리")
-                        .free(true) //.basePrice(100), .maxPrice(200), .limitOfEnrollment(100) 값이 있는경우에 free는 true 일 수 없다.
-                        .offline(false) // .location("강남역 D2 스타텁 팩토리") 가 있는 경우 offline이 false가 될 수 없다.
-                        .eventStatus(EventStatus.PUBLISHED) //EventStatus는 DRAFT여야 하지만 PUBLISHED로 설정
+                        //.free(true) //.basePrice(100), .maxPrice(200), .limitOfEnrollment(100) 값이 있는경우에 free는 true 일 수 없다.
+                        //.offline(false) // .location("강남역 D2 스타텁 팩토리") 가 있는 경우 offline이 false가 될 수 없다.
+                        //.eventStatus(EventStatus.PUBLISHED) //EventStatus는 DRAFT여야 하지만 PUBLISHED로 설정
                         .build();
         /*
             EventRepository는 mock 객체이기 때문에, createEvent에서는 Null값을 반환하면서, NullPointException 발생
@@ -120,5 +120,36 @@ public class EventControllerTests {
         따라서 이 테스트는 "/api/events" 엔드포인트에 POST 요청을 보내 새 이벤트를 생성하고,
         그 결과로 반환된 응답이 적절한 상태 코드와 새 이벤트의 ID를 포함하고 있는지 검증합니다.
      */
+    @Test
+    public void createEvent_Bad_request() throws Exception {
+        /*
+        application.properties에 아래의 Jackson의 ObjectMapper 커스터마이징을 통해
+        spring.jackson.deserialization.fail-on-unknown-properties=true
+        입력값 이외의 properties를 받을 경우 Bad_Request로 응답
+         */
+        Event event = Event.builder()
+                .id(100) // id는 DB에 들어갈때 자동 생성 되어야 되는 값.
+                .name("Spring")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2024,01,25,14,21))
+                .closeEnrollmentDateTime(LocalDateTime.of(2024,01,26,14,21))
+                .beginEventDateTime(LocalDateTime.of(2024,01,25,14,21))
+                .endEventDateTime(LocalDateTime.of(2024,01,26,14,21))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 D2 스타텁 팩토리")
+                .free(true) //.basePrice(100), .maxPrice(200), .limitOfEnrollment(100) 값이 있는경우에 free는 true 일 수 없다.
+                .offline(false) // .location("강남역 D2 스타텁 팩토리") 가 있는 경우 offline이 false가 될 수 없다.
+                .eventStatus(EventStatus.PUBLISHED) //EventStatus는 DRAFT여야 하지만 PUBLISHED로 설정
+                .build();
 
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(event)))
+                        .andDo(print())
+                        .andExpect(status().isBadRequest())
+        ;
+    }
 }
