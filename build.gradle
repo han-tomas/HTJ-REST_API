@@ -41,6 +41,14 @@ dependencies {
 	implementation 'org.modelmapper:modelmapper:3.2.0'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	//springboot가 버전업을 하면서 web 의존성안에 있던 constraints packeage가 아예 모듈로 빠졌다. @Valid
+	testImplementation 'pl.pragmatists:JUnitParams:1.1.1'
+	testImplementation 'org.junit.vintage:junit-vintage-engine:5.10.0'
+	/*
+	JunitParams는 JUnit 4와 호환되지만 JUnit 5와는 직접 호환되지 않는다.
+	JUnit 5에서 JunitParams를 사용하려면 junit-vintage-engine 의존성을 추가해야한다. 
+	이렇게 하면 JUnit 5에서 JUnit 4 스타일의 테스트를 실행할 수 있게 된다.
+	 */
+
 }
 
 test {
