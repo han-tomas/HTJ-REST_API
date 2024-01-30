@@ -190,6 +190,13 @@ public class EventControllerTests {
         this.mockMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(eventDto)))
-                .andExpect(status().isBadRequest());
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].objectName").exists()) // 에러 배열 중 objectName
+                //.andExpect(jsonPath("$[0].field").exists())// 어떤 필드에서 발생한 오류인지 // GlobalErrors의 경우에 오류 발생할 수 있으므로
+                .andExpect(jsonPath("$[0].defaultMessage").exists()) // 기본 메세지는 무엇인지
+                .andExpect(jsonPath("$[0].code").exists()) // 에러 코드는 무엇인지
+                //.andExpect(jsonPath("$[0].rejectedValue").exists()) // 에러가 발생된 값이 무엇이였는지.// GlobalErrors의 경우에 오류 발생할 수 있으므로
+        ;
     }
 }

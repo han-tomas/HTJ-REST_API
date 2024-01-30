@@ -41,12 +41,18 @@ public class EventController {
             검증을 수행한 결과들을 모아 Errors타입에 errors라는 객체에 담는다.
          */
         if(errors.hasErrors()){
-            return ResponseEntity.badRequest().build(); // 에러가 있으면 Bad_Request를 리턴한다.
+            //return ResponseEntity.badRequest().build(); // 에러가 있으면 Bad_Request를 리턴한다.
+            return ResponseEntity.badRequest().body(errors);
+            /*
+                하지만 errors의 경우에는 자바 빈 스펙을 준수한 객체가 아니다. 따라서 BeanSerialization을 통해서 JSON변환이 불가능하다.
+                즉, return ResponseEntity.badRequest().body(errors);는 에러발생 => Customize한 ErrorsSerializer를 이용해 해결
+             */
         }
 
         eventValidator.validate(eventDto, errors);
         if(errors.hasErrors()){ // eventValidator를 통해 들어온 error가 있으면
-            return ResponseEntity.badRequest().build(); // Bad_Request를 리턴한다.
+            //return ResponseEntity.badRequest().build(); // Bad_Request를 리턴한다.
+            return ResponseEntity.badRequest().body(errors);
         }
 
         Event event = modelMapper.map(eventDto, Event.class);
@@ -56,6 +62,13 @@ public class EventController {
         URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
         event.setId(10);
         return ResponseEntity.created(createdUri).body(event);
+        /*
+            Event라는 도메인은 자바 빈 스펙을 준수
+            Controller에서 body에 담아준 객체 event를 JSON으로 변환할 때, ObjectMapper를 사용해서 변환을 하는데
+            ObjectMapper는 자바 빈 스펙을 준수한 event 객체의 정보를 BeanSerializer를 통해서 JSON으로 변환이 가능하다.
+            (아무런 Cutomize된 Serialization없이도)
+             Serialization : 어떤 객체를 JSON으로 변환하는 것 <-> Deserialization
+         */
     }
 
     //@PostMapping //("/api/events") 위에서 매핑되었기 때문에 중복해서 설정안해도 됨.
