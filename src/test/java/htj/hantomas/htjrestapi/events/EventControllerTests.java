@@ -148,8 +148,18 @@ public class EventControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaTypes.HAL_JSON_VALUE)
                         .content(objectMapper.writeValueAsString(event)))
-                        .andDo(print())
-                        .andExpect(status().isBadRequest())
+                .andDo(print())
+                .andExpect(status().isBadRequest())
         ;
+    }
+
+    @Test
+    public void createEvent_Bad_Request_Empty_Input() throws Exception {
+        EventDto eventDto = EventDto.builder().build();
+
+        this.mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isBadRequest());
     }
 }

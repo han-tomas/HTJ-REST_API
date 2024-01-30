@@ -1,11 +1,14 @@
 package htj.hantomas.htjrestapi.events;
 
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,10 +31,27 @@ public class EventController {
         this.eventRepository = eventRepository;
         this.modelMapper = modelMapper;
     }
-    @PostMapping //("/api/events") 위에서 매핑되었기 때문에 중복해서 설정안해도 됨.
+    @PostMapping
+    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors){
+        /*
+            @Valid 어노테이션을 사용하면 Request에 있는 값들,
+            즉 EventDto(또는 Entity)에 값들을 바인딩 할 때, 검증을 수행 할 수 있고
+            검증을 수행한 결과들을 모아 Errors타입에 errors라는 객체에 담는다.
+         */
+        if(errors.hasErrors()){
+            return ResponseEntity.badRequest().build(); // 에러가 있으면 Bad_Request를 리턴한다.
+        }
+        Event event = modelMapper.map(eventDto, Event.class);
+
+        Event newEvent = this.eventRepository.save(event);
+
+        URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
+        event.setId(10);
+        return ResponseEntity.created(createdUri).body(event);
+    }
+
+    //@PostMapping //("/api/events") 위에서 매핑되었기 때문에 중복해서 설정안해도 됨.
     /*
-    클래스 안에 있는 모든 Handler들은 HAL_JSON ContentType으로 요청을 보낼거고
-     */
     public ResponseEntity createEvent(@RequestBody EventDto eventDto){
         /*
         Event event = Event.builder()
@@ -41,6 +61,7 @@ public class EventController {
          EventDto를 사용하기 위해서는 이렇게 다 정의 후 사용해야 하지만,
          ModelMapper 를 통해 이 과정을 생략할 수 있다.
         */
+        /*
         Event event = modelMapper.map(eventDto, Event.class);
 
         Event newEvent = this.eventRepository.save(event);
@@ -49,6 +70,7 @@ public class EventController {
         event.setId(10);
         return ResponseEntity.created(createdUri).body(event);
     }
+    */
     /*
     public ResponseEntity createEvent(@RequestBody Event event){
         Event newEvent = this.eventRepository.save(event);
