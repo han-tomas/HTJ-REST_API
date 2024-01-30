@@ -1,6 +1,7 @@
 package htj.hantomas.htjrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import htj.hantomas.htjrestapi.common.TestDescription;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -54,6 +55,7 @@ public class EventControllerTests {
         @MockBean으로 등록해준ㄷ.
      */
     @Test
+    @TestDescription("정삭적으로 이벤트를 생성하는 테스트")
     public void createEvent() throws Exception {
         EventDto event = EventDto.builder()
                         //.id(100) // id는 DB에 들어갈때 자동 생성 되어야 되는 값.
@@ -121,6 +123,7 @@ public class EventControllerTests {
         그 결과로 반환된 응답이 적절한 상태 코드와 새 이벤트의 ID를 포함하고 있는지 검증합니다.
      */
     @Test
+    @TestDescription("입력 받을 수 없는 값을 사용한 경우 에러가 발생하는 테스트")
     public void createEvent_Bad_request() throws Exception { // 입력값 이외의 입력에 대한 Bad_Request응답
         /*
         application.properties에 아래의 Jackson의 ObjectMapper 커스터마이징을 통해
@@ -154,6 +157,7 @@ public class EventControllerTests {
     }
 
     @Test
+    @TestDescription("입력값이 비어있는 경우에 에러가 발생하는 테스트")
     public void createEvent_Bad_Request_Empty_Input() throws Exception { // 입력값이 비어있을때 @Valid를 이용한 Validation(검증)
         EventDto eventDto = EventDto.builder().build();
 
@@ -164,6 +168,7 @@ public class EventControllerTests {
     }
 
     @Test
+    @TestDescription("입력값이 잘못된 경우에 에러가 발생하는 테스트")
     public void createEvent_Bad_Request_Wrong_Input() throws Exception { // 입력값이 잘못 되었을때
                                                                         /*
                                                                              (ex. 이벤트 종료날짜가 시작날짜보다 빠른경우,
