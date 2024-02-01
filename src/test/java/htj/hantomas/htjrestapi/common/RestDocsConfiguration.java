@@ -1,0 +1,17 @@
+package htj.hantomas.htjrestapi.common;
+
+import org.springframework.boot.test.autoconfigure.restdocs.RestDocsMockMvcConfigurationCustomizer;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.restdocs.mockmvc.MockMvcRestDocumentationConfigurer;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+
+@TestConfiguration
+public class RestDocsConfiguration { // 포멧팅하는 설정
+    @Bean
+    public RestDocsMockMvcConfigurationCustomizer restDocsMockMvcConfigurationCustomizer(){
+        return configurer -> configurer.operationPreprocessors()
+                .withRequestDefaults(prettyPrint())
+                .withResponseDefaults(prettyPrint());
+    }
+}
