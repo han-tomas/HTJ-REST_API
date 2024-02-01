@@ -93,13 +93,19 @@ public class EventControllerTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("id").exists())
                 .andExpect(header().exists(HttpHeaders.LOCATION))
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE,MediaTypes.HAL_JSON_VALUE))
+                //.andExpect(header().string(HttpHeaders.CONTENT_TYPE,MediaTypes.HAL_JSON_VALUE))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, "application/hal+json;charset=UTF-8")) // 한글 깨짐 오류 수정
                 .andExpect(jsonPath("free").value(false)) // free는 true면 안된다
                 .andExpect(jsonPath("offline").value(true))
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name())) //EventStatus는 DRAFT여야 한다.
                 /*
                    EventDto의 값을 이용하기 때문에 테스트에 넣어준 id와 free값(DTO에 없는)은 자동으로 무시 되므로, 테스트는 성공하게 된다.
                 */
+                // HATEOAS
+                .andExpect(jsonPath("_links.self").exists()) // self링크가 잘 만들어졌는지 (존재하는지)
+                //.andExpect(jsonPath("_links.profile").exists())
+                .andExpect(jsonPath("_links.query-events").exists()) // 이벤트 목록으로 가는 링크
+                .andExpect(jsonPath("_links.update-event").exists()) // 이벤트 수정으로 가는 링크
         ;
     }
     /*

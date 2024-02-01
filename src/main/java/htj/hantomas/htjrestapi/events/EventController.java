@@ -3,7 +3,9 @@ package htj.hantomas.htjrestapi.events;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -59,9 +61,20 @@ public class EventController {
         event.update();
         Event newEvent = this.eventRepository.save(event);
 
-        URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
-        event.setId(10);
-        return ResponseEntity.created(createdUri).body(event);
+        //======================HATEOAS 링크 추가하는 부분 ============================================
+        WebMvcLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(newEvent.getId());
+        URI createdUri = selfLinkBuilder.toUri(); // linkTo : HATEOAS가 제공하는 링크를 만들어주는 기능
+        // 매핑된 정보를 읽어 와서 링크를 만드는 방식         // /api/events / id
+
+        //EventResource eventResource = new EventResource(event);
+        EntityModel eventResource = EntityModel.of(newEvent); // EntityModel을 사용하는 경우
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+        eventResource.add(selfLinkBuilder.withSelfRel());
+        //보통 self링크는 해당 이벤트 리소스 마다 생성해줘야 하기 때문에 EventResource에 추가해 주는 것이 좋다.
+        eventResource.add(selfLinkBuilder.withRel("update-event"));
+        //==========================================================================================
+
+        return ResponseEntity.created(createdUri).body(eventResource);
         /*
             Event라는 도메인은 자바 빈 스펙을 준수
             Controller에서 body에 담아준 객체 event를 JSON으로 변환할 때, ObjectMapper를 사용해서 변환을 하는데
