@@ -1,5 +1,6 @@
 package htj.hantomas.htjrestapi.events;
 
+import htj.hantomas.htjrestapi.common.ErrorsResource;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,16 @@ public class EventController {
         this.modelMapper = modelMapper;
         this.eventValidator = eventValidator;
     }
+    private ResponseEntity badRequest(Errors errors) {
+        return ResponseEntity.badRequest().body(new ErrorsResource(errors)); // 에러를 리소스로 변환
+    }
     @PostMapping
+    /*
+    ResourceSupport	-> RepresentationModel
+    Resource	    -> EntityModel
+    Resources	    -> CollectionModel
+    PagedResources	-> PagedModel
+     */
     public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors){
         /*
             @Valid 어노테이션을 사용하면 Request에 있는 값들,
@@ -45,7 +55,13 @@ public class EventController {
          */
         if(errors.hasErrors()){
             //return ResponseEntity.badRequest().build(); // 에러가 있으면 Bad_Request를 리턴한다.
-            return ResponseEntity.badRequest().body(errors);
+            //return ResponseEntity.badRequest().body(ErrorsResource.of(errors);// badRequest를 받아서 본문(body)에 넣어주는데 이를 리소스로 변환
+            /*
+            private ResponseEntity badRequest(Errors errors) { // eventValidator(유효성검사) 후에도 똑같은 코드를 리팩토링
+                return ResponseEntity.badRequest().body(ErrorsResource.of(errors));
+            }
+             */
+            return badRequest(errors);
             /*
                 하지만 errors의 경우에는 자바 빈 스펙을 준수한 객체가 아니다. 따라서 BeanSerialization을 통해서 JSON변환이 불가능하다.
                 즉, return ResponseEntity.badRequest().body(errors);는 에러발생 => Customize한 ErrorsSerializer를 이용해 해결
@@ -55,7 +71,8 @@ public class EventController {
         eventValidator.validate(eventDto, errors);
         if(errors.hasErrors()){ // eventValidator를 통해 들어온 error가 있으면
             //return ResponseEntity.badRequest().build(); // Bad_Request를 리턴한다.
-            return ResponseEntity.badRequest().body(errors);
+            //return ResponseEntity.badRequest().body(ErrorsResource.of(errors);// 에러를 리소스로 변환
+            return badRequest(errors);
         }
 
         Event event = modelMapper.map(eventDto, Event.class);
@@ -67,10 +84,10 @@ public class EventController {
         URI createdUri = selfLinkBuilder.toUri(); // linkTo : HATEOAS가 제공하는 링크를 만들어주는 기능
         // 매핑된 정보를 읽어 와서 링크를 만드는 방식         // /api/events / id
 
-        //EventResource eventResource = new EventResource(event);
-        EntityModel eventResource = EntityModel.of(newEvent); // EntityModel을 사용하는 경우
+        EventResource eventResource = new EventResource(newEvent);
+        //EntityModel eventResource = EntityModel.of(newEvent); // EntityModel을 사용하는 경우
         eventResource.add(linkTo(EventController.class).withRel("query-events"));
-        eventResource.add(selfLinkBuilder.withSelfRel());
+        //eventResource.add(selfLinkBuilder.withSelfRel());
         //보통 self링크는 해당 이벤트 리소스 마다 생성해줘야 하기 때문에 EventResource에 추가해 주는 것이 좋다.
         eventResource.add(selfLinkBuilder.withRel("update-event"));
         eventResource.add(Link.of("/docs/asciidoc/index.html#resources-events-create").withRel("profile"));

@@ -9,8 +9,13 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 public class EventResource extends EntityModel<Event> {
 
-    public EventResource(Event event, Iterable<Link> links) {
+    /*public EventResource(Event event, Iterable<Link> links) {
         super(event, links);
+        add(linkTo(EventController.class).slash(event.getId()).withSelfRel());
+        //보통 self링크는 해당 이벤트 리소스 마다 생성해줘야 하기 때문에 EventResource에 추가해 주는 것이 좋다.
+    }*/
+    public EventResource(Event event) {
+        super(event);
         add(linkTo(EventController.class).slash(event.getId()).withSelfRel());
         //보통 self링크는 해당 이벤트 리소스 마다 생성해줘야 하기 때문에 EventResource에 추가해 주는 것이 좋다.
     }
