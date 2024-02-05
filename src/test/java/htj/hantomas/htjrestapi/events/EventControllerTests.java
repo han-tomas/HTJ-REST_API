@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -41,6 +42,7 @@ Web과 관련된 Bean들만 등록해서 만듦 => 더 빠름
  */
 @AutoConfigureRestDocs // Spring RestDocs 사용
 @Import(RestDocsConfiguration.class)// 포멧팅하는 설정
+@ActiveProfiles("test")
 public class EventControllerTests {
     @Autowired
     MockMvc mockMvc;

@@ -35,7 +35,7 @@ dependencies {
 
 	// ascii 관련 추가
 	asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor'
-	runtimeOnly 'com.h2database:h2'
+	testRuntimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'org.springframework.boot:spring-boot-starter-hateoas'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
