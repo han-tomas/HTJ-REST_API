@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.0.5'
 	id 'io.spring.dependency-management' version '1.1.0'
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
+	// Java 17의 경우 org.asciidoctor.convert 가 아닌 org.asciidoctor.jvm.convert를 사용해 주어야 합니다.
 }
 
 group = 'practice'
@@ -50,6 +51,11 @@ dependencies {
 	 */
 	implementation 'org.springframework.boot:spring-boot-starter-hateoas:3.1.2'
 	// Spring HATEOAS 를 사용하기위한 dependency 추가
+
+	// Spring Rest Docs 관련 추가
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	// ascii 관련 추가
+	asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
 }
 
