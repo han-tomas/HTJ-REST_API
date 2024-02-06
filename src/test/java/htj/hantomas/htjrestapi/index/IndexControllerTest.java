@@ -1,5 +1,6 @@
 package htj.hantomas.htjrestapi.index;
 
+import htj.hantomas.htjrestapi.common.BaseController;
 import htj.hantomas.htjrestapi.common.RestDocsConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,15 +16,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@AutoConfigureRestDocs
-@Import(RestDocsConfiguration.class)
-@ActiveProfiles("test")
-public class IndexControllerTest {
 
-    @Autowired
-    MockMvc mockMvc;
+public class IndexControllerTest extends BaseController {
+
 
     @Test
     public void index() throws Exception {

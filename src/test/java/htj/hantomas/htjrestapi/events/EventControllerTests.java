@@ -1,6 +1,7 @@
 package htj.hantomas.htjrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import htj.hantomas.htjrestapi.common.BaseController;
 import htj.hantomas.htjrestapi.common.RestDocsConfiguration;
 import htj.hantomas.htjrestapi.common.TestDescription;
 import org.hamcrest.Matchers;
@@ -34,43 +35,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 //@WebMvcTest
-@SpringBootTest // Slicing Test 안하고
-@AutoConfigureMockMvc // SpringBootTest시 MockMVC를 사용하려면
-/*
-Web과 관련된 것만 등록을 해줬기 때문에 Slicing Test라 한다
-Web과 관련된 Bean들만 등록해서 만듦 => 더 빠름
-구역을 나눠서 테스트한다. => 단위 테스트라고 할 순 없음
- */
-@AutoConfigureRestDocs // Spring RestDocs 사용
-@Import(RestDocsConfiguration.class)// 포멧팅하는 설정
-@ActiveProfiles("test")
-public class EventControllerTests {
-    @Autowired
-    MockMvc mockMvc;
-    /*
-    MockMVC를 사용하면 moc으로 만들어져 있는, 모킹 되어있는 Dispatcher Servlet을 상대로
-    가짜 요청을 Dispatcher Servlet에게 보내고 응답을 확인할 수 있는 테스트를 만들 수 있다.
-    -> Web Server를 띄우지 않기 때문에 빠르다
-        하지만, Dispatcher Servlet까지 만들어야 하기 때문에 단위 테스트 보단 오래걸린다.
-     */
-    @Autowired
-    ObjectMapper objectMapper;
-    /*
-     SpringBoot를 사용할 때 MappingJacksonJson이 의존성으로 들어가 있으면,
-     ObjectMapper를 자동으로 bean으로 등록을 해준다.
-     */
+
+public class EventControllerTests extends BaseController {
+
     /*
     @MockBean
     EventRepository eventRepository;
     */
     /*
         @WebMvcTest는 web용 bean들만 등록해주고, Repository bean은 등록해 주지 않는다.
-        @MockBean으로 등록해준ㄷ.
+        @MockBean으로 등록해준다.
      */
     @Autowired
     EventRepository eventRepository;
-    @Autowired
-    ModelMapper modelMapper;
+
     @Test
     @TestDescription("정삭적으로 이벤트를 생성하는 테스트")
     public void createEvent() throws Exception {
