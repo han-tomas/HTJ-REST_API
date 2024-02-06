@@ -43,7 +43,7 @@ public class EventController {
     private ResponseEntity badRequest(Errors errors) {
         return ResponseEntity.badRequest().body(new ErrorsResource(errors)); // 에러를 리소스로 변환
     }
-    @PostMapping
+    @PostMapping // 이벤트 생성
     /*
     ResourceSupport	-> RepresentationModel
     Resource	    -> EntityModel
@@ -105,30 +105,6 @@ public class EventController {
              Serialization : 어떤 객체를 JSON으로 변환하는 것 <-> Deserialization
          */
     }
-    @GetMapping
-    public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler){
-        Page<Event> page = this.eventRepository.findAll(pageable);
-        //PagedResourcesAssembler<T> 를 사용해서 findAll(pageable) 결과로 나온 page 를 리소스로 바꾸어서 링크 정보를 추가
-
-        //var pagedResources = assembler.toModel(page) // 현재 페이지,이전 페이지,다음 페이지에 대한 링크
-        var pagedResources = assembler.toModel(page, e -> new EventResource(e)); // 완전한 HATEOAS 를 충족하기 위해서는 각각의 이벤트(self)로 갈 수 있는 링크
-
-        pagedResources.add(Link.of("/docs/index.html#resources-events-list").withRel("profile")); // profile링크 추가
-        return ResponseEntity.ok(pagedResources);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity getEvent(@PathVariable Integer id){
-        Optional<Event> optionalEvent = this.eventRepository.findById(id);
-        if(optionalEvent.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        Event event = optionalEvent.get();
-        EventResource eventResource = new EventResource(event);
-        eventResource.add(Link.of("/docs/index.html#resources-events-get").withRel("profile"));
-        return ResponseEntity.ok(eventResource);
-    }
-
     //@PostMapping //("/api/events") 위에서 매핑되었기 때문에 중복해서 설정안해도 됨.
     /*
     public ResponseEntity createEvent(@RequestBody EventDto eventDto){
@@ -194,4 +170,66 @@ public class EventController {
     따라서 이 코드는 새로운 이벤트를 생성한 후, 그 이벤트의 위치를 Location 헤더에 담아 HTTP 201 Created 응답을 반환하는 역할을 합니다.
     이는 REST API에서 리소스 생성 후에 권장되는 방식입니다.
      */
+
+
+    @GetMapping // 이벤트 목록
+    public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler){
+        Page<Event> page = this.eventRepository.findAll(pageable);
+        //PagedResourcesAssembler<T> 를 사용해서 findAll(pageable) 결과로 나온 page 를 리소스로 바꾸어서 링크 정보를 추가
+
+        //var pagedResources = assembler.toModel(page) // 현재 페이지,이전 페이지,다음 페이지에 대한 링크
+        var pagedResources = assembler.toModel(page, e -> new EventResource(e)); // 완전한 HATEOAS 를 충족하기 위해서는 각각의 이벤트(self)로 갈 수 있는 링크
+
+        pagedResources.add(Link.of("/docs/index.html#resources-events-list").withRel("profile")); // profile링크 추가
+        return ResponseEntity.ok(pagedResources);
+    }
+
+    @GetMapping("/{id}") // 이벤트 조회
+    public ResponseEntity getEvent(@PathVariable Integer id){
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        /*
+        Optional<T> 클래스를 사용해 NullPointException를 방지할 수 있도록 도와준다.
+        Optional<T>는 null이 올 수 있는 값을 감싸는 Wrapper 클래스로, 참조하더라도 NPE가 발생하지 않도록 도와준다.
+         */
+        if(optionalEvent.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Event event = optionalEvent.get();
+        EventResource eventResource = new EventResource(event);
+        eventResource.add(Link.of("/docs/index.html#resources-events-get").withRel("profile"));
+        return ResponseEntity.ok(eventResource);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity updateEvent(@PathVariable Integer id,@RequestBody @Valid EventDto eventDto,
+                                      Errors errors) {
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        if(optionalEvent.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        if(errors.hasErrors()){
+            return badRequest(errors);
+        }
+
+        this.eventValidator.validate(eventDto, errors);
+        if(errors.hasErrors()){
+            return badRequest(errors);
+        }
+
+        Event existingEvent = optionalEvent.get(); // 기존 데이터
+        /*
+        existingEvent.setName(eventDto.getName());
+        existingEvent.setName(eventDto.getDescription());
+        ...
+        하나하나 이렇게 덮어 씌워줄수 있지만,
+        modelMapper를 사용해서
+         */
+        this.modelMapper.map(eventDto, existingEvent); // Update하려고 하는 데이터가 들어있는 eventDto를 기존데어터 existingEvent에 덮어준다.
+        Event updatedEvent = this.eventRepository.save(existingEvent);
+
+        EventResource eventResource = new EventResource(updatedEvent);
+        eventResource.add(Link.of("/docs/index.html#resources-events-update").withRel("profile"));
+
+        return ResponseEntity.ok(eventResource);
+    }
 }
