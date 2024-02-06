@@ -4,6 +4,10 @@ import htj.hantomas.htjrestapi.common.ErrorsResource;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -13,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -86,11 +91,11 @@ public class EventController {
 
         EventResource eventResource = new EventResource(newEvent);
         //EntityModel eventResource = EntityModel.of(newEvent); // EntityModel을 사용하는 경우
-        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));// 이벤트 목록으로 가는 링크
         //eventResource.add(selfLinkBuilder.withSelfRel());
         //보통 self링크는 해당 이벤트 리소스 마다 생성해줘야 하기 때문에 EventResource에 추가해 주는 것이 좋다.
-        eventResource.add(selfLinkBuilder.withRel("update-event"));
-        eventResource.add(Link.of("/docs/asciidoc/index.html#resources-events-create").withRel("profile"));
+        eventResource.add(selfLinkBuilder.withRel("update-event")); // 이벤트 수정으로 가는 링크
+        eventResource.add(Link.of("/docs/asciidoc/index.html#resources-events-create").withRel("profile")); // profile로 가는 링크 추가
         //==========================================================================================
 
         return ResponseEntity.created(createdUri).body(eventResource);
@@ -101,6 +106,17 @@ public class EventController {
             (아무런 Cutomize된 Serialization없이도)
              Serialization : 어떤 객체를 JSON으로 변환하는 것 <-> Deserialization
          */
+    }
+    @GetMapping
+    public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler){
+        Page<Event> page = this.eventRepository.findAll(pageable);
+        //PagedResourcesAssembler<T> 를 사용해서 findAll(pageable) 결과로 나온 page 를 리소스로 바꾸어서 링크 정보를 추가
+
+        //var pagedResources = assembler.toModel(page) // 현재 페이지,이전 페이지,다음 페이지에 대한 링크
+        var pagedResources = assembler.toModel(page, e -> new EventResource(e)); // 완전한 HATEOAS 를 충족하기 위해서는 각각의 이벤트(self)로 갈 수 있는 링크
+
+        pagedResources.add(Link.of("/docs/asciidoc/index.html#resources-events-list").withRel("profile")); // profile링크 추가
+        return ResponseEntity.ok(pagedResources);
     }
 
     //@PostMapping //("/api/events") 위에서 매핑되었기 때문에 중복해서 설정안해도 됨.

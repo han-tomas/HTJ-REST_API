@@ -21,14 +21,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -66,6 +66,8 @@ public class EventControllerTests {
         @WebMvcTest는 web용 bean들만 등록해주고, Repository bean은 등록해 주지 않는다.
         @MockBean으로 등록해준ㄷ.
      */
+    @Autowired
+    EventRepository eventRepository;
     @Test
     @TestDescription("정삭적으로 이벤트를 생성하는 테스트")
     public void createEvent() throws Exception {
@@ -267,5 +269,32 @@ public class EventControllerTests {
                 //.andExpect(jsonPath("$[0].rejectedValue").exists()) // 에러가 발생된 값이 무엇이였는지.// GlobalErrors의 경우에 오류 발생할 수 있으므로 주석처리 하겠다.
                 .andExpect(jsonPath("_links.index").exists())
         ;
+    }
+    @Test
+    @TestDescription("30개의 이벤트를 10개씩 두번째 페이지 조회하기")
+    public void queryEvents() throws Exception{
+        // Given
+        IntStream.range(0,30).forEach(this::generatedEvent); // 메서드 표현식 메서드 레퍼런스
+
+        // When
+        this.mockMvc.perform(get("/api/events")
+                        .param("page","1")
+                        .param("size","10")
+                        .param("sort","name,DESC"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())//_embedded안에 eventList[0]안에 _links.self가 존재하는가
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("query-events")) // profile에 관한 링크를 만드려면 문서화 필요
+        ;
+    }
+    private void generatedEvent(int index){
+        Event event = Event.builder()
+                .name("event " + index)
+                .description("test index " + index)
+                .build();
+
+        this.eventRepository.save(event);
     }
 }
