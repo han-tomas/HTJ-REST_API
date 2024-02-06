@@ -17,12 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -95,7 +93,7 @@ public class EventController {
         //eventResource.add(selfLinkBuilder.withSelfRel());
         //보통 self링크는 해당 이벤트 리소스 마다 생성해줘야 하기 때문에 EventResource에 추가해 주는 것이 좋다.
         eventResource.add(selfLinkBuilder.withRel("update-event")); // 이벤트 수정으로 가는 링크
-        eventResource.add(Link.of("/docs/asciidoc/index.html#resources-events-create").withRel("profile")); // profile로 가는 링크 추가
+        eventResource.add(Link.of("/docs/index.html#resources-events-create").withRel("profile")); // profile로 가는 링크 추가
         //==========================================================================================
 
         return ResponseEntity.created(createdUri).body(eventResource);
@@ -115,8 +113,20 @@ public class EventController {
         //var pagedResources = assembler.toModel(page) // 현재 페이지,이전 페이지,다음 페이지에 대한 링크
         var pagedResources = assembler.toModel(page, e -> new EventResource(e)); // 완전한 HATEOAS 를 충족하기 위해서는 각각의 이벤트(self)로 갈 수 있는 링크
 
-        pagedResources.add(Link.of("/docs/asciidoc/index.html#resources-events-list").withRel("profile")); // profile링크 추가
+        pagedResources.add(Link.of("/docs/index.html#resources-events-list").withRel("profile")); // profile링크 추가
         return ResponseEntity.ok(pagedResources);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity getEvent(@PathVariable Integer id){
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        if(optionalEvent.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Event event = optionalEvent.get();
+        EventResource eventResource = new EventResource(event);
+        eventResource.add(Link.of("/docs/index.html#resources-events-get").withRel("profile"));
+        return ResponseEntity.ok(eventResource);
     }
 
     //@PostMapping //("/api/events") 위에서 매핑되었기 때문에 중복해서 설정안해도 됨.
