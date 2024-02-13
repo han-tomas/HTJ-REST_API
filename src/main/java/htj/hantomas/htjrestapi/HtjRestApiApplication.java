@@ -11,8 +11,4 @@ public class HtjRestApiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(HtjRestApiApplication.class, args);
 	}
-	@Bean
-	public ModelMapper modelMapper(){
-		return new ModelMapper();
-	}
 }
