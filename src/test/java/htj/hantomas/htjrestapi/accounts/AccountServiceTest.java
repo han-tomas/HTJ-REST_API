@@ -1,22 +1,28 @@
 package htj.hantomas.htjrestapi.accounts;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
 public class AccountServiceTest {
+
     @Autowired
     AccountService accountService;
 
@@ -40,5 +46,18 @@ public class AccountServiceTest {
 
         //Then
         assertThat(userDetails.getPassword()).isEqualTo(password);
+    }
+    
+    @Test //Junit5 버전의 예외 테스트
+    public void findByUsernameFail(){
+        //Expected
+        String username = "random@email.com";
+        Exception exception = assertThrows(UsernameNotFoundException.class, () -> {
+            accountService.loadUserByUsername(username);
+        });
+
+        // When
+        assertThat(exception.getMessage()).contains(username);
+
     }
 }
