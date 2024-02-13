@@ -1,5 +1,6 @@
 package htj.hantomas.htjrestapi.events;
 
+import htj.hantomas.htjrestapi.accounts.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -42,6 +43,8 @@ public class Event {
     private boolean free;
     @Enumerated(EnumType.STRING)
     private EventStatus eventStatus = EventStatus.DRAFT;
+    @ManyToOne
+    private Account manager;
 
     public void update(){
         // Update free
